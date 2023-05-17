@@ -44,6 +44,38 @@ class AnnotationEditingController extends TextEditingController {
     return someVal;
   }
 
+  /// Can be used to get the markup from the controller directly.
+  String get markupIds {
+    final someVal = _mapping.isEmpty
+        ? text
+        : text.splitMapJoin(
+            RegExp('$_pattern'),
+            onMatch: (Match match) {
+              final mention = _mapping[match[0]!] ??
+                  _mapping[_mapping.keys.firstWhere((element) {
+                    final reg = RegExp(element);
+
+                    return reg.hasMatch(match[0]!);
+                  })]!;
+
+              // Default markup format for mentions
+              if (!mention.disableMarkup) {
+                return mention.markupBuilder != null
+                    ? mention.markupBuilder!(
+                        mention.trigger, mention.id!, mention.display!)
+                    : '@id-${mention.id}';
+              } else {
+                return match[0]!;
+              }
+            },
+            onNonMatch: (String text) {
+              return '';
+            },
+          );
+
+    return someVal;
+  }
+
   Map<String, Annotation> get mapping {
     return _mapping;
   }
